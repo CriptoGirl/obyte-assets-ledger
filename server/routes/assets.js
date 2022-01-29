@@ -91,9 +91,9 @@ router.post('/register/', async (req, res) => {
 				payload: trigger.data
 			};
 			var opts = {
-				paying_addresses: [global.changeAddress],
-				change_address: global.changeAddress,
-				amount: 1e8,
+				paying_addresses: [trigger.address],
+				change_address: trigger.address,
+				amount: trigger.outputs.base,
 				to_address: conf.tokenRegistryAA,
 				messages: [objMessage]
 			};
@@ -137,9 +137,9 @@ router.post('/remove-deposit/', async (req, res) => {
 				payload: trigger.data
 			};
 			var opts = {
-				paying_addresses: [global.changeAddress],
-				change_address: global.changeAddress,
-				amount: 1e4,
+				paying_addresses: [trigger.address],
+				change_address: trigger.address,
+				amount: trigger.outputs.base,
 				to_address: conf.tokenRegistryAA,
 				messages: [objMessage]
 			};
