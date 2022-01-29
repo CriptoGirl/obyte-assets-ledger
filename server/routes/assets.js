@@ -63,4 +63,96 @@ router.post('/', async (req, res) => {
 	catch (err) { return sendError(err, 500, res) }
 })
 
+router.post('/register/', async (req, res) => {
+	try {
+		if (!global.firstAddress || !global.changeAddress) {
+			throw Error('Wallet is locked. Enter passphrase in console.');
+		}
+		const data = req.body;
+		var trigger = { 
+			outputs: {base: 1e8}, 
+			address: global.changeAddress,
+			data: {}
+		};
+		
+		trigger.data['symbol'] = String(data.symbol).toUpperCase();
+		trigger.data['description'] = data.description || conf.defaultAssetDescription;
+		trigger.data['decimals'] = data.decimals || 0;
+		trigger.data['asset'] = data.asset;
+
+		network.requestFromLightVendor('light/dry_run_aa', { trigger: trigger, address: conf.tokenRegistryAA }, function (ws, request, arrResponses) {
+			if (arrResponses[0].response.error) return sendError('Error:'+ arrResponses[0].response.error, 500, res)
+			if (arrResponses[0].response.info) return sendError('Already registered.', 500, res)
+			const responseMessage = arrResponses[0].objResponseUnit.messages.find(function (message) { return (message.app === 'data'); });
+			if (!responseMessage) return sendError('Error. Please register manually on Obyte Token Registry', 500, res)
+
+			var objMessage = {
+				app: "data",
+				payload: trigger.data
+			};
+			var opts = {
+				paying_addresses: [global.changeAddress],
+				change_address: global.changeAddress,
+				amount: 1e8,
+				to_address: conf.tokenRegistryAA,
+				messages: [objMessage]
+			};
+		
+			headlessWallet.sendMultiPayment(opts, function(err, unit){
+				if (err) return sendError(err, 500, res)
+				console.error('==== Unit ID:'+ unit);
+				res.status(201);
+				res.send({ unit })
+			});
+		});
+	}
+	catch (err) { return sendError(err, 500, res) }
+})
+
+router.post('/remove-deposit/', async (req, res) => {
+	try {
+		if (!global.firstAddress || !global.changeAddress) {
+			throw Error('Wallet is locked. Enter passphrase in console.');
+		}
+		const data = req.body;
+		var trigger = { 
+			outputs: {base: 1e4}, 
+			address: global.changeAddress,
+			data: {}
+		};
+		
+		trigger.data['withdraw'] = 1;
+		trigger.data['amount'] = 1e8;
+		trigger.data['symbol'] = String(data.symbol).toUpperCase();
+		trigger.data['asset'] = data.asset;
+
+		network.requestFromLightVendor('light/dry_run_aa', { trigger: trigger, address: conf.tokenRegistryAA }, function (ws, request, arrResponses) {
+			if (arrResponses[0].response.error) return sendError('Error:'+ arrResponses[0].response.error, 500, res)
+			if (arrResponses[0].response.info) return sendError('Info:'+ arrResponses[0].response.info, 500, res)
+			const responseMessage = arrResponses[0].objResponseUnit.messages.find(function (message) { return (message.app === 'payment'); });
+			if (!responseMessage) return sendError('Error. Please withdraw manually on Obyte Token Registry', 500, res)
+
+			var objMessage = {
+				app: "data",
+				payload: trigger.data
+			};
+			var opts = {
+				paying_addresses: [global.changeAddress],
+				change_address: global.changeAddress,
+				amount: 1e4,
+				to_address: conf.tokenRegistryAA,
+				messages: [objMessage]
+			};
+		
+			headlessWallet.sendMultiPayment(opts, function(err, unit){
+				if (err) return sendError(err, 500, res)
+				console.error('==== Unit ID:'+ unit);
+				res.status(201);
+				res.send({ unit })
+			});
+		});
+	}
+	catch (err) { return sendError(err, 500, res) }
+})
+
 module.exports = router;

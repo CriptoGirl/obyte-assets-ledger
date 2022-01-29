@@ -11,6 +11,8 @@ exports.bSingleAddress = false; // DO NOT CHANGE
 exports.bStaticChangeAddress = true; // DO NOT CHANGE
 exports.payout_address = ''; // where Bytes can be moved manually.
 exports.allowedExternalAssets = []; // asset IDs on additional allowed assets.
+exports.tokenRegistryAA = 'O6H6ZIFI57X3PLTYHOCVYPP5A553CYFQ';
+exports.defaultAssetDescription = 'Asset by obyte-assets-ledger';
 
 // emails
 exports.admin_email = '';
